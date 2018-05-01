@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.util.Log;
 import android.view.MotionEvent;
 
 import java.util.ArrayList;
@@ -17,21 +18,25 @@ import java.util.List;
 class World {
     private List<Sprite> sprites;
     private PlayerSprite player;
+    private static final int PLAYER_SPRITE_WIDTH = 100;
+    private static final int PLAYER_TRANSLATE_SPEED = 15000;
+    private static final float SCREEN_WIDTH = Resources.getSystem().getDisplayMetrics().widthPixels;
+    private static final float SCREEN_HEIGHT = Resources.getSystem().getDisplayMetrics().heightPixels;
 
     public World() {
         sprites = new ArrayList<>();
-        sprites.add(player = new PlayerSprite(new Vec2d(Resources.getSystem().getDisplayMetrics().widthPixels / 2, Resources.getSystem().getDisplayMetrics().heightPixels - 200)));
+        sprites.add(player = new PlayerSprite(new Vec2d((SCREEN_WIDTH / 2) - (PLAYER_SPRITE_WIDTH / 2), 1000)));
     }
 
-    public void tick(double dt) {
+    public void tick(float dt) {
         MotionEvent e = TouchEventQueue.getInstance().dequeue();
         if (e != null) {
-            handleMotionEvent(e);
+            handleMotionEvent(e, dt);
         }
         for (Sprite s : sprites) {
             s.tick(dt);
         }
-        resolveCollisions();
+        //resolveCollisions();
     }
 
     private void resolveCollisions() {
@@ -54,22 +59,28 @@ class World {
      *
      * @param e the MotionEvent corresponding to the touch
      */
-    private void handleMotionEvent(MotionEvent e) {
-
+    private void handleMotionEvent(MotionEvent e, float dt) {
+        if (e.getX() > SCREEN_WIDTH / 2) {
+            //player touched the right, so move right
+            player.setTranslateSpeed(dt, PLAYER_TRANSLATE_SPEED);
+        } else {
+            //player touched left, so move left
+            player.setTranslateSpeed(dt, -PLAYER_TRANSLATE_SPEED);
+        }
+        if (e.getAction() == MotionEvent.ACTION_UP) {
+            player.setTranslateSpeed(dt, 0);
+        }
     }
 
     public void draw(Canvas c) {
         Bitmap bg = BitmapRepo.getInstance().getImage(R.drawable.background);
         float y = player.getPosition().getY();
-        c.translate(0, -y+100);
+        c.translate(0,  -y+(3*SCREEN_HEIGHT/4));
         int backgroundNumber = (int)(y / bg.getHeight());
-        c.drawBitmap(bg, 0, bg.getHeight()*backgroundNumber - 1, null);
-        c.drawBitmap(bg, 0, bg.getHeight()*backgroundNumber, null);
-        c.drawBitmap(bg, 0, bg.getHeight()*backgroundNumber + 1, null);
-        /*c.drawBitmap(bg, bg.getWidth()*(backgroundNumber-1), 0,  null);
-        c.drawBitmap(bg, bg.getWidth()*backgroundNumber, 0,  null);
-        c.drawBitmap(bg, bg.getWidth()*(backgroundNumber+1), 0,  null);
-        */
+        c.drawBitmap(bg, 0, bg.getHeight()* (backgroundNumber - 2), null);
+        c.drawBitmap(bg, 0, bg.getHeight()* (backgroundNumber - 1), null);
+        c.drawBitmap(bg, 0, bg.getHeight()* backgroundNumber, null);
+        c.drawBitmap(bg, 0, bg.getHeight()* (backgroundNumber + 1), null);
         for(Sprite s: sprites)
             s.draw(c);
     }

@@ -20,12 +20,12 @@ class RenderLoop implements Runnable {
     @Override
     public void run() {
         while(!Thread.interrupted()) {
-            world.tick(1.0/FPS);
+            world.tick(1.0f/FPS);
             drawWorld();
             try {
                 delay();
             } catch (InterruptedException ex) {
-
+                ex.printStackTrace();
             }
         }
     }
