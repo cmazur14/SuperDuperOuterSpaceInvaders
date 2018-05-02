@@ -56,6 +56,10 @@ class BitmapRepo {
         return bitmap;
     }
 
+    public Context getContext() {
+        return context;
+    }
+
     private void addBitmapToMemoryCache(String key, Bitmap bitmap) {
         if (getBitmapFromMemCache(key) == null) {
             cache.put(key, bitmap);
