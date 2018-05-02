@@ -5,9 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.util.Log;
 import android.view.MotionEvent;
-import android.widget.ArrayAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,14 +19,22 @@ class World {
     private List<Sprite> sprites;
     private List<AlienSprite> aliens;
     private PlayerSprite player;
+    private PlayerBulletSprite playerBullet;
+    private List<PlayerBulletSprite> playerBullets;
     private static final int PLAYER_SPRITE_WIDTH = 100;
     private static final int PLAYER_TRANSLATE_SPEED = 15000;
     private static final float SCREEN_WIDTH = Resources.getSystem().getDisplayMetrics().widthPixels;
     private static final float SCREEN_HEIGHT = Resources.getSystem().getDisplayMetrics().heightPixels;
+    private int tickCounter;
+    private int mPlayer_ship0;
+    private Long initialTime;
     private static final int INVERSE_SHOTS_PER_TICK = 20;
     private Random rng;
 
     public World() {
+        initialTime = System.nanoTime();
+        tickCounter = 0;
+        playerBullets = new ArrayList<>();
         sprites = new ArrayList<>();
         aliens = new ArrayList<>();
         sprites.add(player = new PlayerSprite(new Vec2d((SCREEN_WIDTH / 2) - (PLAYER_SPRITE_WIDTH / 2), 1000)));
@@ -54,18 +60,64 @@ class World {
         for (Sprite s : sprites) {
             s.tick(dt);
         }
-        checkIfFireLaser();
+        checkIfAliensFireLaser();
+        spawnPlayerBullet();
+        removeOldPlayerBullets();
+        tickCounter++;
         //resolveCollisions();
     }
 
-    private void checkIfFireLaser() {
-        if (rng.nextInt(INVERSE_SHOTS_PER_TICK) == 5)
-            fireRandomLaser();
+    private void removeOldPlayerBullets() {
+        int toBeRemovedFromBullets = 0;
+        for(PlayerBulletSprite bull : playerBullets) {
+            if ((bull.getPosition().getY() - player.getPosition().getY()) > SCREEN_HEIGHT) {
+                sprites.remove(bull);
+                toBeRemovedFromBullets = playerBullets.indexOf(bull);
+            }
+        }
+        if (playerBullets.size() > 0) {
+            playerBullets.remove(toBeRemovedFromBullets);
+        }
     }
 
-    private void fireRandomLaser() {
+    private void spawnPlayerBullet() {
+        if (tickCounter == 10) {
+            playerBullet = new PlayerBulletSprite((new Vec2d(player.getPosition().getX()+50, player.getPosition().getY()
+                    - 5)));
+            sprites.add(playerBullet);
+            playerBullets.add(playerBullet);
+            tickCounter = 0;
+        }
+    }
+
+    private void checkIfAliensFireLaser() {
+        if (rng.nextInt(INVERSE_SHOTS_PER_TICK) == 5)
+            fireRandomAlienLaser();
+    }
+
+    private void fireRandomAlienLaser() {
         Vec2d positionOfAlien = aliens.get(rng.nextInt(aliens.size())).getPosition();
         sprites.add(new AlienLaserSprite(positionOfAlien));
+    }
+
+    private void drawTimer(Canvas c)
+    {
+        Paint p = new Paint();
+        p.setColor(Color.WHITE);
+        p.setTextSize(100);
+        String t = findTime();
+        p.setTextAlign(Paint.Align.CENTER);
+
+
+        c.drawText("Time: " + t ,SCREEN_WIDTH/2,player.getPosition().getY()+400, p);
+
+    }
+    private String findTime()
+    {
+        Long newTime = System.nanoTime()-initialTime;
+        newTime = newTime/1000000000;
+        return Long.toString(newTime);
+
     }
 
     private void resolveCollisions() {
@@ -112,5 +164,6 @@ class World {
         c.drawBitmap(bg, 0, bg.getHeight()* (backgroundNumber + 1), null);
         for(Sprite s: sprites)
             s.draw(c);
+        drawTimer(c);
     }
 }
