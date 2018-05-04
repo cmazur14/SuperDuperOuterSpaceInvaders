@@ -44,7 +44,14 @@ public class AlienSprite extends Sprite {
         setBitmaps(s);
 
         explosion = new BitmapSequence();
-        explosion.addImage(r.getImage(R.drawable.explosion0), 0.2);
+        explosion.addImage(r.getImage(R.drawable.explosion0), 0.1);
+        explosion.addImage(r.getImage(R.drawable.explosion1), 0.1);
+        explosion.addImage(r.getImage(R.drawable.explosion2), 0.1);
+        explosion.addImage(r.getImage(R.drawable.explosion3), 0.1);
+        explosion.addImage(r.getImage(R.drawable.explosion4), 0.1);
+        explosion.addImage(r.getImage(R.drawable.explosion5), 0.1);
+
+
     }
 
     @Override

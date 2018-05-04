@@ -33,9 +33,10 @@ class World {
     private int tickCounter;
     private int mPlayer_ship0;
     private Long initialTime;
-    private static final int INVERSE_SHOTS_PER_TICK = 20;
+    private int inverseShotsPerTick = 20;
     private Random rng;
     private int score;
+    private Vec2d playerPosition;
 
     public World() {
         initialTime = System.nanoTime();
@@ -53,12 +54,13 @@ class World {
     }
 
     public void incrementScore() {
-        score++;
+        score ++;
     }
 
     private void generateAliens() {
+        int screenTop = (int) (player.getPosition().getY() - SCREEN_HEIGHT);
         for (int i = 100; i < SCREEN_WIDTH - 100; i += 200) {
-            for (int j = -200; j < 200; j += 100 ) {
+            for (int j = screenTop + 500; j < screenTop + 801; j += 100 ) {
                 AlienSprite alien = new AlienSprite(new Vec2d(i, j));
                 sprites.add(alien);
                 aliens.add(alien);
@@ -67,25 +69,47 @@ class World {
     }
 
     public void tick(float dt) {
-        MotionEvent e = TouchEventQueue.getInstance().dequeue();
-        if (e != null) {
-            handleMotionEvent(e, dt);
+        if (player != null) {
+            MotionEvent e = TouchEventQueue.getInstance().dequeue();
+            if (e != null) {
+                handleMotionEvent(e, dt);
+            }
+            for (Sprite s : sprites) {
+                s.tick(dt, this);
+            }
+            checkIfAliensFireLaser();
+            spawnPlayerBullet();
+            tickCounter++;
+            resolveCollisions();
+            for (Sprite s : toBeRemoved) {
+                sprites.remove(s);
+                if (s.getClass().equals(PlayerBulletSprite.class))
+                    playerBullets.remove(s);
+                else if (s.getClass().equals(AlienLaserSprite.class))
+                    alienBullets.remove(s);
+                else if (s.getClass().equals(AlienSprite.class)) {
+                    aliens.remove(s);
+                    score++;
+                }
+            }
+            toBeRemoved.clear();
+            checkLevelCompletion();
         }
-        for (Sprite s : sprites) {
-            s.tick(dt, this);
+    }
+
+    private void checkLevelCompletion() {
+        if (aliens.size() == 0) {
+            generateAliens();
+            Log.d("ShotFrequency", "" + inverseShotsPerTick);
+            if (inverseShotsPerTick > 1)
+                inverseShotsPerTick--;
+            else
+                declareWin();
         }
-        checkIfAliensFireLaser();
-        spawnPlayerBullet();
-        tickCounter++;
-        resolveCollisions();
-        for (Sprite s : toBeRemoved) {
-            sprites.remove(s);
-            if (s.getClass().equals(PlayerBulletSprite.class))
-                playerBullets.remove(s);
-            else if (s.getClass().equals(AlienLaserSprite.class))
-                alienBullets.remove(s);
-        }
-        toBeRemoved.clear();
+    }
+
+    private void declareWin() {
+        //TODO
     }
 
     public PlayerSprite getPlayer() {
@@ -94,6 +118,7 @@ class World {
 
     public void removePlayer() {
         sprites.remove(player);
+        playerPosition = player.getPosition();
         player = null;
     }
 
@@ -108,7 +133,7 @@ class World {
     }
 
     private void checkIfAliensFireLaser() {
-        if (rng.nextInt(INVERSE_SHOTS_PER_TICK) == 5)
+        if (rng.nextInt(inverseShotsPerTick) == 1)
             fireRandomAlienLaser();
     }
 
@@ -123,7 +148,7 @@ class World {
     {
         Paint p = new Paint();
         p.setColor(Color.WHITE);
-        p.setTextSize(100);
+        p.setTextSize(85);
         String t = findTime();
         p.setTextAlign(Paint.Align.CENTER);
 
@@ -131,6 +156,25 @@ class World {
         c.drawText("Time: " + t ,SCREEN_WIDTH/2,player.getPosition().getY()+400, p);
 
     }
+
+    private void drawScore(Canvas c) {
+        Paint p = new Paint();
+        p.setColor(Color.YELLOW);
+        p.setTextSize(65);
+        p.setTextAlign(Paint.Align.CENTER);
+
+        c.drawText("Score: " + score, 3 * SCREEN_WIDTH / 4 + 100, player.getPosition().getY() + 400, p);
+    }
+
+    private void drawLevel(Canvas c) {
+        Paint p = new Paint();
+        p.setColor(Color.YELLOW);
+        p.setTextSize(65);
+        p.setTextAlign(Paint.Align.CENTER);
+
+        c.drawText("Level: " + (21 - inverseShotsPerTick), SCREEN_WIDTH / 4 - 100, player.getPosition().getY() + 400, p);
+    }
+
     private String findTime()
     {
         Long newTime = System.nanoTime()-initialTime;
@@ -173,16 +217,33 @@ class World {
     }
 
     public void draw(Canvas c) {
-        Bitmap bg = BitmapRepo.getInstance().getImage(R.drawable.background);
-        float y = player.getPosition().getY();
-        c.translate(0,  -y+ (3*SCREEN_HEIGHT/4));
-        int backgroundNumber = (int)(y / bg.getHeight());
-        c.drawBitmap(bg, 0, bg.getHeight()* (backgroundNumber - 2), null);
-        c.drawBitmap(bg, 0, bg.getHeight()* (backgroundNumber - 1), null);
-        c.drawBitmap(bg, 0, bg.getHeight()* backgroundNumber, null);
-        c.drawBitmap(bg, 0, bg.getHeight()* (backgroundNumber + 1), null);
-        for(Sprite s: sprites)
-            s.draw(c);
-        drawTimer(c);
+        if (player != null) {
+            Bitmap bg = BitmapRepo.getInstance().getImage(R.drawable.background);
+            float y = player.getPosition().getY();
+            c.translate(0, -y + (3 * SCREEN_HEIGHT / 4));
+            int backgroundNumber = (int) (y / bg.getHeight());
+            c.drawBitmap(bg, 0, bg.getHeight() * (backgroundNumber - 2), null);
+            c.drawBitmap(bg, 0, bg.getHeight() * (backgroundNumber - 1), null);
+            c.drawBitmap(bg, 0, bg.getHeight() * backgroundNumber, null);
+            c.drawBitmap(bg, 0, bg.getHeight() * (backgroundNumber + 1), null);
+            for (Sprite s : sprites)
+                s.draw(c);
+            drawTimer(c);
+            drawScore(c);
+            drawLevel(c);
+        }
+        drawDeathSplash(c);
     }
+
+    private void drawDeathSplash(Canvas c)  {
+        Paint p = new Paint();
+        p.setColor(Color.WHITE);
+        p.setTextSize(200);
+        String t = "YOU\nDIED!";
+        p.setTextAlign(Paint.Align.CENTER);
+
+
+        c.drawText("Time: " + t ,SCREEN_WIDTH/2,playerPosition.getY()+400, p);
+    }
+
 }
