@@ -35,6 +35,14 @@ class BitmapSequence {
         return bitmaps.get(current);
     }
 
+    public int getLength() {
+        return bitmaps.size();
+    }
+
+    public int getCurrIndex() {
+        return current;
+    }
+
     public void nextBitmap() {
         current = (current + 1) % bitmaps.size();
         timeShowingCurrent = 0;

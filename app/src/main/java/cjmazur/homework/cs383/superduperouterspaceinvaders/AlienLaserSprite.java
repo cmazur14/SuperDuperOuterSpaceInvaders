@@ -35,8 +35,19 @@ class AlienLaserSprite extends Sprite {
     }
 
     @Override
-    public void tick(double dt) {
-        super.tick(dt);
-        setPosition(getPosition().add(new Vec2d(0, dt * FLY_SPEED)));
+    public void tick(double dt, World world) {
+        super.tick(dt, world);
+
+        Vec2d pos = getPosition();
+        if (pos.getY() > world.getPlayer().getPosition().getY() + 100) {
+            world.toBeRemoved.add(this);
+            return;
+        }
+        setPosition(pos.add(new Vec2d((float) 0, (float) dt * FLY_SPEED)));
+    }
+
+    @Override
+    public void resolve(Collision collision, Sprite other, World world) {
+
     }
 }

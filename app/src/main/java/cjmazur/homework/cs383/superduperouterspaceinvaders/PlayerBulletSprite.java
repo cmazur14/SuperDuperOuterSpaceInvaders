@@ -2,10 +2,10 @@ package cjmazur.homework.cs383.superduperouterspaceinvaders;
 
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.util.Log;
 
 public class PlayerBulletSprite extends Sprite
 {
-    private float translateSpeed = 0;
     private static final int upSpeed = -1500;
     private boolean dead=false;
     public PlayerBulletSprite(Vec2d v)
@@ -47,21 +47,27 @@ public class PlayerBulletSprite extends Sprite
     }
 
     @Override
-    public void tick(double dt)
+    public void tick(double dt, World world)
     {
-        super.tick(dt);
-        setPosition(getPosition().add(new Vec2d((float) dt * translateSpeed, (float) dt * upSpeed)));
-    }
-
-    public void setTranslateSpeed(float dt, float value)
-    {
-        translateSpeed = dt * value;
+        super.tick(dt, world);
+        Vec2d pos = getPosition();
+        if (pos.getY() < world.getPlayer().getPosition().getY() - world.SCREEN_HEIGHT) {
+            world.toBeRemoved.add(this);
+            return;
+        } else
+            setPosition(pos.add(new Vec2d((float) 0, (float) dt * upSpeed)));
     }
 
     @Override
-    public void resolve(Collision collision, Sprite other)
+    public void resolve(Collision collision, Sprite other, World world)
     {
-
+        if (other.isDying())
+            return;
+        else {
+            other.startDeath();
+            world.sprites.remove(this);
+            world.playerBullets.remove(this);
+        }
 
     }
 

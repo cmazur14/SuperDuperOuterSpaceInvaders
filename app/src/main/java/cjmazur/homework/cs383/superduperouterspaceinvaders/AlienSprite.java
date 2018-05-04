@@ -12,8 +12,8 @@ public class AlienSprite extends Sprite {
 
     private static final int upSpeed = -280;
     private BitmapSequence explosion;
+    private boolean dying;
     private boolean dead;
-    private boolean explosionFinished;
     private boolean dirRight;
     private static final float translateSpeed = 200;
     private int amtMoved;
@@ -24,8 +24,8 @@ public class AlienSprite extends Sprite {
 
     public AlienSprite(Vec2d v) {
         super(v);
+        dying = false;
         dead = false;
-        explosionFinished = false;
         dirRight = true;
         amtMoved = 0;
         movedThisTick = 0;
@@ -48,25 +48,36 @@ public class AlienSprite extends Sprite {
     }
 
     @Override
-    public void tick(double dt) {
-        super.tick(dt);
-        if (dirRight) {
-            movedThisTick = (int) (translateSpeed * dt);
-            amtMoved += movedThisTick ;
-            setPosition(getPosition().add(new Vec2d(movedThisTick, dt* upSpeed)));
-            if (amtMoved > 100)
-                dirRight = false;
+    public void tick(double dt, World world) {
+        super.tick(dt, world);
+        if (!dying) {
+            if (dirRight) {
+                movedThisTick = (int) (translateSpeed * dt);
+                amtMoved += movedThisTick;
+                setPosition(getPosition().add(new Vec2d(movedThisTick, dt * upSpeed)));
+                if (amtMoved > 100)
+                    dirRight = false;
+            } else {
+                movedThisTick = (int) (-translateSpeed * dt);
+                amtMoved += movedThisTick;
+                setPosition(getPosition().add(new Vec2d(movedThisTick, dt * upSpeed)));
+                if (amtMoved < -100)
+                    dirRight = true;
+            }
         } else {
-            movedThisTick = (int) (-translateSpeed * dt);
-            amtMoved += movedThisTick;
-            setPosition(getPosition().add(new Vec2d(movedThisTick, dt* upSpeed)));
-            if (amtMoved < -100)
-                dirRight= true;
+            if (explosion.getCurrIndex() == explosion.getLength() - 1)
+                world.toBeRemoved.add(this);
         }
     }
 
-    public void makeDead() {
-        dead = true;
+    @Override
+    public boolean isDying() {
+        return dying;
+    }
+
+    @Override
+    public void startDeath() {
+        dying = true;
         setBitmaps(explosion);
     }
 

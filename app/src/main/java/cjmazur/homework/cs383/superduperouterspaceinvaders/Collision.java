@@ -27,8 +27,8 @@ public class Collision {
         }
     }
 
-    public void resolve() {
-        sprite1.resolve(this, sprite2);
+    public void resolve(World world) {
+        sprite1.resolve(this, sprite2, world);
     }
 
     public RectF getCollisionRectangle() {

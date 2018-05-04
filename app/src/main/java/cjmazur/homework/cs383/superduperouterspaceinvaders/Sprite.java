@@ -34,7 +34,7 @@ public abstract class Sprite {
         bitmaps.drawCurrent(c, position.getX(), position.getY(), null);
     }
 
-    public void tick(double dt) {
+    public void tick(double dt, World world) {
         bitmaps.tick(dt);
     }
 
@@ -61,9 +61,15 @@ public abstract class Sprite {
             return r;
     }
 
+    public boolean isDying() {
+        return false;
+    }
+
+    public void startDeath() {}
+
     public abstract boolean isActive();
 
-    public void resolve(Collision collision, Sprite other) {
+    public void resolve(Collision collision, Sprite other, World world) {
 
     }
 

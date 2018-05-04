@@ -13,11 +13,13 @@ public class PlayerSprite extends Sprite {
     private static final int upSpeed = -300;
     private float translateSpeed = 0;
     private boolean dead;
+    private boolean dying;
     private BitmapSequence deadSequence;
 
     public PlayerSprite(Vec2d v) {
         super(v);
         dead = false;
+        dying = false;
         loadBitmaps();
     }
 
@@ -63,8 +65,8 @@ public class PlayerSprite extends Sprite {
     }
 
     @Override
-    public void tick(double dt) {
-        super.tick(dt);
+    public void tick(double dt, World world) {
+        super.tick(dt, world);
         setPosition(getPosition().add(new Vec2d((float) dt * translateSpeed, (float) dt * upSpeed)));
     }
 
@@ -73,11 +75,12 @@ public class PlayerSprite extends Sprite {
     }
 
     @Override
-    public void resolve(Collision collision, Sprite other) {
-        if (!dead) makeDead();
+    public boolean isDying() {
+        return dying;
     }
 
-    private void makeDead() {
+    @Override
+    public void startDeath() {
         dead = true;
         setBitmaps(deadSequence);
     }
