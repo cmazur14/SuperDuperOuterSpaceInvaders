@@ -57,5 +57,12 @@ public class MainMenuActivity extends AppCompatActivity {
                 startActivity(i);
             }
         });
+        quitGame.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+                System.exit(0);
+            }
+        });
     }
 }

@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         BitmapRepo.getInstance().setContext(this);
+        World.getInstance().setContext(this);
         textureView = findViewById(R.id.texture_view);
         textureView.setSurfaceTextureListener(textureListener);
         textureView.setOnTouchListener(new View.OnTouchListener() {
@@ -81,4 +82,11 @@ public class MainActivity extends AppCompatActivity {
         ActionBar actionBar = getActionBar();
         if (actionBar != null) actionBar.hide();
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopThreads();
+    }
+
 }

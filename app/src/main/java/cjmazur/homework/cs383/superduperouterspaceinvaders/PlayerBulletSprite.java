@@ -65,6 +65,7 @@ public class PlayerBulletSprite extends Sprite
             return;
         else {
             other.startDeath();
+            world.playExplosion();
             world.sprites.remove(this);
             world.playerBullets.remove(this);
         }

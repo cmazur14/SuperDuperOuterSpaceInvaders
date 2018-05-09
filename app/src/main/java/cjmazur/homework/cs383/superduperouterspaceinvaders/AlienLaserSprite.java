@@ -54,6 +54,7 @@ class AlienLaserSprite extends Sprite {
             return;
         else {
             other.startDeath();
+            world.playExplosion();
             Log.d("Collisions", "resolve() called on AlienLaserSprite");
         }
     }

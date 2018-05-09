@@ -1,10 +1,12 @@
 package cjmazur.homework.cs383.superduperouterspaceinvaders;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.media.MediaPlayer;
 import android.util.Log;
 import android.view.MotionEvent;
 
@@ -38,7 +40,10 @@ class World {
     private Vec2d playerPosition;
     private boolean freezeFrame = false;
 
-    public World() {
+    private static World defaultInstance;
+    private static Context context;
+
+    private World() {
         initialTime = System.nanoTime();
         score = 0;
         tickCounter = 0;
@@ -53,6 +58,16 @@ class World {
         rng = new Random(System.currentTimeMillis());
     }
 
+    public static World getInstance() {
+        if (defaultInstance == null)
+            defaultInstance = new World();
+        return defaultInstance;
+    }
+
+    public void setContext(Context c) {context = c;}
+
+    public Context getContext() {return context;}
+
     public void incrementScore() {
         score += (21-inverseShotsPerTick);
     }
@@ -66,6 +81,11 @@ class World {
                 aliens.add(alien);
             }
         }
+    }
+
+    public static void playExplosion() {
+        final MediaPlayer explosion = MediaPlayer.create(context, R.raw.explosion );
+        explosion.start();
     }
 
     public void tick(float dt) {

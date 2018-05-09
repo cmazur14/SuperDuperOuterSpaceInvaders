@@ -1,5 +1,7 @@
 package cjmazur.homework.cs383.superduperouterspaceinvaders;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Canvas;
 import android.view.TextureView;
@@ -12,10 +14,12 @@ class RenderLoop implements Runnable {
     private static final int FPS = 30;
     private final World world;
     private final TextureView textureView;
+    private Activity context;
 
     public RenderLoop(TextureView textureView) {
         this.textureView = textureView;
-        world = new World();
+        world = World.getInstance();
+        context = (Activity) textureView.getContext();
     }
 
     @Override
@@ -33,7 +37,6 @@ class RenderLoop implements Runnable {
                 try {
                     delay(FPS);
                     startNextActivity();
-                    delay(999999999);
                 } catch (InterruptedException ex) {
                     ex.printStackTrace();
                 }
@@ -43,7 +46,7 @@ class RenderLoop implements Runnable {
     }
 
     private void startNextActivity() {
-        textureView.getContext().startActivity(new Intent(textureView.getContext(), Main2Activity.class));
+        context.startActivity(new Intent(textureView.getContext(), MainMenuActivity.class));
     }
 
     private void delay() throws InterruptedException {
