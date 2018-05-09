@@ -36,6 +36,7 @@ class RenderLoop implements Runnable {
             } else {
                 try {
                     delay(FPS);
+                    world.destroyWorld();
                     startNextActivity();
                 } catch (InterruptedException ex) {
                     ex.printStackTrace();

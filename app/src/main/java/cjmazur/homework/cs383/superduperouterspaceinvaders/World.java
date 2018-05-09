@@ -1,6 +1,7 @@
 package cjmazur.homework.cs383.superduperouterspaceinvaders;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -23,6 +24,7 @@ class World {
     public List<Sprite> toBeRemoved;
     private List<AlienSprite> aliens;
     private PlayerSprite player;
+    private PowerUpSprite powerUp;
     private PlayerBulletSprite newPlayerBullet;
     public List<PlayerBulletSprite> playerBullets;
     private AlienLaserSprite newAlienBullet;
@@ -35,6 +37,7 @@ class World {
     private int tickCounter;
     private Long initialTime;
     private int inverseShotsPerTick = 20;
+    private int inversePlayerShots = 10;
     private Random rng;
     private int score;
     private Vec2d playerPosition;
@@ -63,6 +66,8 @@ class World {
             defaultInstance = new World();
         return defaultInstance;
     }
+
+    public void destroyWorld() {defaultInstance = null;}
 
     public void setContext(Context c) {context = c;}
 
@@ -122,13 +127,18 @@ class World {
 
     private void checkLevelCompletion() {
         if (aliens.size() == 0) {
+            generatePowerUp();
             generateAliens();
-            Log.d("ShotFrequency", "" + inverseShotsPerTick);
             if (inverseShotsPerTick > 1)
                 inverseShotsPerTick--;
             else
                 declareWin();
         }
+    }
+
+    private void generatePowerUp() {
+        powerUp = new PowerUpSprite(playerPosition.add(new Vec2d(0, -600)));
+        sprites.add(powerUp);
     }
 
     private void declareWin() {
@@ -144,8 +154,12 @@ class World {
         playerPosition = player.getPosition();
     }
 
+    public void setFireSpeed(int value) {
+        inversePlayerShots = value;
+    }
+
     private void spawnPlayerBullet() {
-        if (tickCounter == 10 && player != null) {
+        if (tickCounter % inversePlayerShots == 0 && player != null) {
             newPlayerBullet = new PlayerBulletSprite((new Vec2d(player.getPosition().getX()+50, player.getPosition().getY()
                     - 5)));
             sprites.add(newPlayerBullet);
@@ -160,10 +174,12 @@ class World {
     }
 
     private void fireRandomAlienLaser() {
-        Vec2d positionOfAlien = aliens.get(rng.nextInt(aliens.size())).getPosition();
-        newAlienBullet = new AlienLaserSprite(positionOfAlien);
-        sprites.add(newAlienBullet);
-        alienBullets.add(newAlienBullet);
+        if (aliens.size() >= 1) {
+            Vec2d positionOfAlien = aliens.get(rng.nextInt(aliens.size())).getPosition();
+            newAlienBullet = new AlienLaserSprite(positionOfAlien);
+            sprites.add(newAlienBullet);
+            alienBullets.add(newAlienBullet);
+        }
     }
 
     private void drawTimer(Canvas c)
@@ -224,6 +240,11 @@ class World {
             }
         }
 
+        if (powerUp != null) {
+            if (powerUp.collidesWith(player))
+                collisions.add(new Collision(powerUp, player));
+        }
+
         for(Collision c: collisions) c.resolve(this);
         collisions.clear();
     }
@@ -263,8 +284,22 @@ class World {
             drawScore(c);
             drawLevel(c);
         }
-        if (player.isDead())
+        if (player.isDead()) {
             drawDeathSplash(c);
+            saveScore();
+        }
+    }
+
+    public void saveScore() {
+        int origS1 = SharedPrefManager.getInstance(context.getApplicationContext()).getScore1();
+        int origS2 = SharedPrefManager.getInstance(context.getApplicationContext()).getScore2();
+        int origS3 = SharedPrefManager.getInstance(context.getApplicationContext()).getScore3();
+        if (score > origS1)
+            SharedPrefManager.getInstance(context.getApplicationContext()).setScores(score, origS1, origS2);
+        else if (score > origS2)
+            SharedPrefManager.getInstance(context.getApplicationContext()).setScores(origS1, score, origS2);
+        else if (score > origS3)
+            SharedPrefManager.getInstance(context.getApplicationContext()).setScores(origS1, origS2, score);
     }
 
     public boolean frozen() {
