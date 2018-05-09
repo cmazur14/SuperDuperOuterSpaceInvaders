@@ -67,6 +67,8 @@ public abstract class Sprite {
 
     public void startDeath() {}
 
+    public boolean isDead() {return false;}
+
     public abstract boolean isActive();
 
     public void resolve(Collision collision, Sprite other, World world) {

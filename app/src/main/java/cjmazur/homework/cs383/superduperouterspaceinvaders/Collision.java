@@ -1,6 +1,7 @@
 package cjmazur.homework.cs383.superduperouterspaceinvaders;
 
 import android.graphics.RectF;
+import android.util.Log;
 
 /**
  * Created by CJ on 4/30/2018.
@@ -28,6 +29,7 @@ public class Collision {
     }
 
     public void resolve(World world) {
+        Log.d("Collisions", "resolving " + sprite1.toString() + " with " + sprite2.toString());
         sprite1.resolve(this, sprite2, world);
     }
 

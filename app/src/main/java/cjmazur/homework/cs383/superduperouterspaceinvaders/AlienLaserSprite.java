@@ -4,6 +4,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.util.Log;
 
 /**
  * Created by CJ on 5/1/2018.
@@ -12,6 +13,7 @@ import android.graphics.Matrix;
 class AlienLaserSprite extends Sprite {
 
     private static final int FLY_SPEED = 300;
+    private World world;
 
     public AlienLaserSprite(Vec2d positionOfAlien) {
         super(positionOfAlien);
@@ -31,7 +33,7 @@ class AlienLaserSprite extends Sprite {
 
     @Override
     public boolean isActive() {
-        return false;
+        return true;
     }
 
     @Override
@@ -48,6 +50,11 @@ class AlienLaserSprite extends Sprite {
 
     @Override
     public void resolve(Collision collision, Sprite other, World world) {
-
+        if (other.isDying() || other.isDead())
+            return;
+        else {
+            other.startDeath();
+            Log.d("Collisions", "resolve() called on AlienLaserSprite");
+        }
     }
 }

@@ -2,7 +2,6 @@ package cjmazur.homework.cs383.superduperouterspaceinvaders;
 
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
-import android.util.Log;
 
 /**
  * Created by CJ on 4/30/2018.
@@ -14,7 +13,7 @@ public class PlayerSprite extends Sprite {
     private float translateSpeed = 0;
     private boolean dead;
     private boolean dying;
-    private BitmapSequence deadSequence;
+    private BitmapSequence explosion;
 
     public PlayerSprite(Vec2d v) {
         super(v);
@@ -32,13 +31,13 @@ public class PlayerSprite extends Sprite {
         s.addImage(getResizedBitmap(r.getImage(R.drawable.player_ship3), 120, 180), 0.1);
         setBitmaps(s);
 
-        deadSequence = new BitmapSequence();
-        deadSequence.addImage(r.getImage(R.drawable.explosion0), 0.1);
-        deadSequence.addImage(r.getImage(R.drawable.explosion1), 0.1);
-        deadSequence.addImage(r.getImage(R.drawable.explosion2), 0.1);
-        deadSequence.addImage(r.getImage(R.drawable.explosion3), 0.1);
-        deadSequence.addImage(r.getImage(R.drawable.explosion4), 0.1);
-        deadSequence.addImage(r.getImage(R.drawable.explosion5), 0.1);
+        explosion = new BitmapSequence();
+        explosion.addImage(r.getImage(R.drawable.explosion0), 0.1);
+        explosion.addImage(r.getImage(R.drawable.explosion1), 0.1);
+        explosion.addImage(r.getImage(R.drawable.explosion2), 0.1);
+        explosion.addImage(r.getImage(R.drawable.explosion3), 0.1);
+        explosion.addImage(r.getImage(R.drawable.explosion4), 0.1);
+        explosion.addImage(r.getImage(R.drawable.explosion5), 0.1);
 
     }
 
@@ -61,13 +60,18 @@ public class PlayerSprite extends Sprite {
 
     @Override
     public boolean isActive() {
-        return true;
+        return false;
     }
 
     @Override
     public void tick(double dt, World world) {
         super.tick(dt, world);
-        setPosition(getPosition().add(new Vec2d((float) dt * translateSpeed, (float) dt * upSpeed)));
+        if (!dying)
+            setPosition(getPosition().add(new Vec2d((float) dt * translateSpeed, (float) dt * upSpeed)));
+        else if (explosion.getCurrIndex() == explosion.getLength() - 1) {
+            dead = true;
+            world.removePlayer();
+        }
     }
 
     public void setTranslateSpeed(float dt, float value) {
@@ -81,8 +85,17 @@ public class PlayerSprite extends Sprite {
 
     @Override
     public void startDeath() {
-        dead = true;
-        setBitmaps(deadSequence);
+        dying = true;
+        setBitmaps(explosion);
     }
 
+    @Override
+    public void resolve(Collision collision, Sprite other, World world) {
+        super.resolve(collision, other, world);
+    }
+
+    @Override
+    public boolean isDead() {
+        return dead;
+    }
 }

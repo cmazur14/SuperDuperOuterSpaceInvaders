@@ -31,12 +31,12 @@ class World {
     public static final float SCREEN_WIDTH = Resources.getSystem().getDisplayMetrics().widthPixels;
     public static final float SCREEN_HEIGHT = Resources.getSystem().getDisplayMetrics().heightPixels;
     private int tickCounter;
-    private int mPlayer_ship0;
     private Long initialTime;
     private int inverseShotsPerTick = 20;
     private Random rng;
     private int score;
     private Vec2d playerPosition;
+    private boolean freezeFrame = false;
 
     public World() {
         initialTime = System.nanoTime();
@@ -54,7 +54,7 @@ class World {
     }
 
     public void incrementScore() {
-        score ++;
+        score += (21-inverseShotsPerTick);
     }
 
     private void generateAliens() {
@@ -69,7 +69,7 @@ class World {
     }
 
     public void tick(float dt) {
-        if (player != null) {
+        if (!player.isDying() && !player.isDead()) {
             MotionEvent e = TouchEventQueue.getInstance().dequeue();
             if (e != null) {
                 handleMotionEvent(e, dt);
@@ -89,11 +89,14 @@ class World {
                     alienBullets.remove(s);
                 else if (s.getClass().equals(AlienSprite.class)) {
                     aliens.remove(s);
-                    score++;
+                    incrementScore();
                 }
             }
+            playerPosition = player.getPosition();
             toBeRemoved.clear();
             checkLevelCompletion();
+        } else if (!player.isDead()) {
+            player.tick(dt, this);
         }
     }
 
@@ -119,7 +122,6 @@ class World {
     public void removePlayer() {
         sprites.remove(player);
         playerPosition = player.getPosition();
-        player = null;
     }
 
     private void spawnPlayerBullet() {
@@ -184,14 +186,23 @@ class World {
     }
 
     private void resolveCollisions() {
-        for(int i=0; i < playerBullets.size()-1; i++)
-            for(int j = 0; j < aliens.size(); j++) {
+        for(int i=0; i < playerBullets.size()-1; i++) {
+            for (int j = 0; j < aliens.size(); j++) {
                 Sprite s1 = playerBullets.get(i);
                 Sprite s2 = aliens.get(j);
 
                 if (s1.collidesWith(s2))
                     collisions.add(new Collision(s1, s2));
             }
+        }
+        for (int i = 0; i < alienBullets.size() - 1; i++) {
+            Sprite s1 = alienBullets.get(i);
+            Sprite s2 = player;
+            if (s1.collidesWith(s2)) {
+                collisions.add(new Collision(s1, s2));
+                Log.d("Collisions", "Player should be dead!");
+            }
+        }
 
         for(Collision c: collisions) c.resolve(this);
         collisions.clear();
@@ -217,7 +228,7 @@ class World {
     }
 
     public void draw(Canvas c) {
-        if (player != null) {
+        if (!player.isDead()) {
             Bitmap bg = BitmapRepo.getInstance().getImage(R.drawable.background);
             float y = player.getPosition().getY();
             c.translate(0, -y + (3 * SCREEN_HEIGHT / 4));
@@ -232,18 +243,24 @@ class World {
             drawScore(c);
             drawLevel(c);
         }
-        drawDeathSplash(c);
+        if (player.isDead())
+            drawDeathSplash(c);
+    }
+
+    public boolean frozen() {
+        return freezeFrame;
     }
 
     private void drawDeathSplash(Canvas c)  {
         Paint p = new Paint();
-        p.setColor(Color.WHITE);
+        p.setColor(Color.RED);
         p.setTextSize(200);
         String t = "YOU\nDIED!";
         p.setTextAlign(Paint.Align.CENTER);
 
-
-        c.drawText("Time: " + t ,SCREEN_WIDTH/2,playerPosition.getY()+400, p);
+        c.drawText(t ,SCREEN_WIDTH/2, playerPosition.getY() + 400, p);
+        Log.d("Texture", "Death Splash drawn");
+        freezeFrame = true;
     }
 
 }
